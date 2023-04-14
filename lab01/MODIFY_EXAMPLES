@@ -1,0 +1,59 @@
+#! /bin/bash
+
+rm -rf examples
+mkdir examples
+cd examples
+
+echo "Creating 5 files"
+for i in {1..5}; do
+    eval ">file$i"
+done
+ls
+
+printf "\nUse modify script to uppercase all files [-u *]\n"
+../modify -u *
+ls
+
+printf "\nUse modify script to lowercase all files [-l *]\n"
+../modify -l *
+ls
+
+printf "\nCreating 5 more files but with different names\n"
+for i in {1..5}; do
+    eval ">text$i"
+done
+ls
+
+printf "\nUse modify script to uppercase files with starting name \"text\" [-u text*]\n"
+../modify -u text*
+ls
+
+printf "\nUse modify script to lowercase all files [ -l *]\n"
+../modify -l *
+ls
+
+printf "\nUse modify script to uppercase a single file which exists [-u file4]\n"
+../modify -u file4
+ls
+
+printf "\nUse modify script to uppercase a single file which does not exist [-u file6]\n"
+../modify -u file6
+ls
+
+printf "\nUse modify script to rename all files with custom sed command to title filenames\n"
+../modify 's/\b\(.\)/\u\1/g' *
+ls
+
+printf "\nUse modify script to uppercase all files and folders using recursion [-r -u *]\n"
+for i in {1..5}; do
+    mkdir "fol$i"
+    cd "fol$i"
+    for j in {1..5}; do
+        eval ">file$i$j"
+    done
+    cd ..
+done
+../modify -r -u *
+find
+
+exit 0

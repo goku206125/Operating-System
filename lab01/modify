@@ -1,0 +1,97 @@
+#!/bin/bash
+
+#function to diplay help maunal
+help()
+{
+        cat << eof
+USAGE:
+
+modify [-r] [-l|-u] <dir/file names...>
+modify [-r] <sed pattern> <dir/file names...>
+modify [-h]
+    
+ARGUMENTS:
+    
+-r      run script with recursion(using find)
+-l      lowercase dir/file name(s)
+-u      uppercase dir/file name(s)
+-h      display this help manual
+eof
+}
+
+#sed pattern to be used when renaming
+pattern=''
+
+#if r is 1, use recursion, else don't
+r=0
+
+while :
+do
+    case "$1" in
+        -l) pattern="s/[A-Z]/\L&/g" ; shift ; break ;;
+        -u) pattern="s/[a-z]/\U&/g" ; shift ; break ;;
+        -r) shift; r=1 ;;
+        -h) help ; exit 1 ;;
+        *) pattern="$1" ; shift ; break ;;
+    esac
+done
+
+#if no files/directories given exit with hint
+if [ -z "$1" ]; then
+        echo "Use -h for help"
+        exit 1
+fi
+
+paths=("$@")
+
+rename()
+{
+        if [ $(realpath "$1") == $(realpath "$0") ]; then
+            echo "Cannot rename the script itself!"
+        elif [ -e "$1" ]; then
+            dir=$(dirname "$1")
+            base=$(basename "$1")
+            nbase=$(sed "$pattern" <<< "$base")
+            npath="$dir/$nbase"
+            mv "$1" "$npath"
+        else
+                echo "$path does not exist!"
+        fi
+}
+
+recurse()
+{
+    for path in "$@"; do
+        if [ -f "$path" ]; then
+            rename "$path"
+        elif [ -d "$path" ]; then
+            npath=$(sed "$pattern" <<< "$path")
+            mv "$path" "$npath"
+            cd "$npath"
+            sub=(*)
+            recurse "${sub[@]}"
+            cd ..
+        else
+            echo "$path does not exist!"
+        fi
+    done
+}
+
+iterate()
+{
+    for path in "$@"; do
+        if [ -e "$path" ]; then
+            rename "$path"
+        else
+            echo "$path does not exist!"
+        fi
+    done
+}
+
+if [ "$r" == "1" ]; then
+    recurse "${paths[@]}"
+else
+    iterate "${paths[@]}"
+fi
+
+exit 0
